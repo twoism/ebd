@@ -40,7 +40,7 @@ chrisb@vsco.co
 - 100% AWS
 - Five languages (Go, Java, Obj-C, JS, PHP)
 - (N) Services
-- One legacy Monotlith (PHP)
+- One legacy Monolith (PHP)
 
 * Infrastructure
 .image mess.jpg
@@ -56,14 +56,14 @@ chrisb@vsco.co
 
 * Anatomy of a feature
 
-Successfull features require both social and technological solutions.
+Successful features require both social and technological solutions.
 
 * Anatomy of a feature
 
 - Design
 - Marketing & Research
 - Analytics
-- Infrastrcture
+- Infrastructure
 - Code
 
 * Feature rollouts are hard.
