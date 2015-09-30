@@ -1,0 +1,269 @@
+Decider
+Distributed Feature Flags
+Tags:
+
+Christopher Burnett
+VSCO, Software Engineer
+chrisb@vsco.co
+@twoism
+
+* Who am I?
+
+- Core Platform Eng. @VSCO
+- Formerly @twitter and @posterous
+
+* The fallacy of intent
+
+* The fallacy of intent
+
+"the design or intention of the author is neither available nor desirable as a standard for judging the success of a work of literary art." -  Monroe Beardsley
+
+* Software is inherently social
+
+* Social adaptivity
+
+- Unique interactions
+- Responsiveness
+- Meaning
+
+* How do we make software this flexible?
+
+* Scale™ at VSCO
+
+* Scale™ at VSCO
+- 300+ nodes
+- 3 mobile clients
+- Web
+
+* Infrastructure
+
+- 100% AWS
+- Five languages (Go, Java, Obj-C, JS, PHP)
+- (N) Services
+- One legacy Monotlith (PHP)
+
+* Infrastructure
+.image mess.jpg
+
+* Most Importantly
+
+- 100+ people
+- ~10 teams
+
+* Coordination is hard
+
+* Not just for software
+
+* Anatomy of a feature
+
+Successfull features require both social and technological solutions.
+
+* Anatomy of a feature
+
+- Design
+- Marketing & Research
+- Analytics
+- Infrastrcture
+- Code
+
+* Feature rollouts are hard.
+
+* What can go wrong?
+
+- Feature Leaks
+- Insufficient Capacity Planning
+- Thundering Heards
+- Sometimes, things are just broken.
+
+* What would be better?
+
+- Controlled releases
+- 1% user base tests
+- Kill switches to allow partial availability
+- Observability
+
+* Decider
+
+* Example
+
+Flags
+
+  super_secret_feature  => 0.5
+  fancy_new_feature     => true
+
+Application Code
+
+  if Decider.IsAvailable("fancy_new_feature") {
+    // Do something fancy
+  } else {
+    // Run legacy path
+  }
+
+* That's great but...
+
+* Production apps aren't that simple
+
+* Design
+
+- Consul key value store (Raft Consensus)
+- Git for audit trail
+- Statsd integration
+- Github organization authentication
+
+* Design
+
+.image decider.png
+
+* Distributed JSON Config
+
+  $ cat /etc/config/decider.json
+  {
+    “decider”: {
+      super_secret_feature: 0.5,
+      enable_beta_feature: false
+    }
+  }
+
+* Design (UI)
+
+.link http://github.com/vsco/decider-ui
+
+.image ui.png
+
+* Audit Trail
+
+.link http://github.com/vsco/decider-config
+
+.image config.png
+
+* Stats
+
+.image stats.png
+
+* Stats
+
+.image enabled.png
+
+* Yay! How do I use this?
+
+* Decider.go
+
+.link http://github.com/vsco/decider-go
+
+  go get github.com/vsco/decider-go
+
+- fsnotify for config changes.
+- Simple API
+
+* Usage (Switches)
+
+   /decider/enable_beta_feature => true
+
+.code switch.go
+
+* Usage (Percentiles)
+
+  /decider/super_secret_feature => 0.5
+
+.code percentile.go
+
+* Usage (Scalars)
+
+  /decider/wait_time_ms => 0.5
+
+.code scalar.go
+
+* Consistent Hashing Concerns
+
+.code func.go
+
+  // ruby -e "require 'zlib';puts Zlib::crc32('some_feature123');"
+  // => 1706325722
+  // php -r "echo crc32('some_feature123');"
+  // => 1706325722
+
+* What about the Monolith?
+
+* Decider.php
+
+  // /etc/config/decider.php
+  <?php
+  static::$features = array();
+  static::$features["super_secret_feature"] = 0.5
+  static::$features["enable_beta_feature"] = true
+
+  /**
+  * Load Features from a custom path
+  *
+  * @param string $path Path to config file.
+  */
+  public static function loadFeaturesFromPath($path)
+  {
+      if (file_exists($path)) {
+          include $path; // <--LOL!
+      } else {
+          throw new \Exception("Decider: config file $path not found.", null);
+      }
+  }
+
+* What about mobile clients?
+
+* Decider API
+
+.link http://github.com/vsco/decider-api
+
+  GET /decider.json HTTP/1.1
+  User-Agent: curl/7.37.1
+  Host: :8000
+  Accept: */*
+  Accept-Language: en
+
+  HTTP/1.1 200 OK
+  Cache-Control: must-revalidate, public
+  Content-Type: application/json
+  Etag: 6f86d7c356efe1d3ce8186c
+  Date: Wed, 08 Jul 2015 19:24:27 GMT
+  Content-Length: 98
+
+  {
+    “decider”: {
+      current_sha: “6f86d7c356efe1d3ce8186c”,
+      super_secret_feature: 0.5,
+      enable_beta_feature: false
+    }
+  }
+
+* API (HTTP Caching)
+
+  GET /decider.json HTTP/1.1
+  User-Agent: curl/7.37.1
+  Host: :8000
+  Accept: */*
+  Accept-Language: en
+  If-None-Match: 6f86d7c356efe1d3ce8186c
+
+  HTTP/1.1 304 Not Modified
+  Cache-Control: must-revalidate, public
+  Etag: 6f86d7c356efe1d3ce8186c
+  Date: Wed, 08 Jul 2015 20:05:30 GMT
+
+* What's next?
+
+- Role based features (ACL)
+- Geo-targeted and Locale features
+- Client version specific flags
+- Much better UI/CLI
+- Open Source
+
+* Who?
+
+- Abhi Yerra @abhiyerra
+- Christopher Burnett @twoism
+- Rob Sayre @sayre
+
+* Reading Material
+
+Notes on Distributed Systems for Young Bloods - @jmhodges
+
+.link https://sandofsky.com/blog/you-can-t-go-home-again.html
+.link http://www.somethingsimilar.com/2013/01/14/notes-on-distributed-systems-for-young-bloods/
